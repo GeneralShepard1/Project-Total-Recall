@@ -12,6 +12,8 @@ sudo nmap -sV -p21 <IP>
 sudo nmap --script ftp-anon,ftp-banner,ftp-syst -p21 <IP>
 Ranjivo: anonymous login / plain-text login
 Fix: FTPS/SFTP, ugasiti FTP ako ne treba
+ranjiv ako je :vsftpd.3.4 (poznat primjer u labovima)
+Backdoor trojan (Remote shell) + kompromitacija sistema
 
 22 SSH
 sudo nmap -sV -p22 <IP>
