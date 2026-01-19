@@ -55,6 +55,21 @@ sudo nmap --script http-title,http-headers,http-methods,http-enum,http-robots.tx
 sudo nmap --script http-trace -p80 <IP>
 Ranjivo: HTTP bez enkripcije / directory listing / TRACE
 Fix: HTTPS + update server + ugasiti listing
+Ako vidiš metode tipa:PUT,DELETE,TRACE,CONNECT
+to je ozbiljnije (moguć upload/modifikacija ili XST).
+
+Šta znači?
+/server-status je Apache modul mod_status.
+Zašto je to ranjivo?
+Ako je dostupan bez zaštite, može pokazati:
+aktivne requestove
+IP adrese klijenata
+URL-ove koje ljudi posjećuju 
+onemogućiti mod_status ili dozvoliti samo localhost/admin IP:informacije o serveru i performansama
+
+
+
+
 
 443 HTTPS
 sudo nmap -sV -p443 <IP>
