@@ -21,6 +21,28 @@ sudo nmap --script ssh2-enum-algos -p22 <IP>
 ssh -v user@<IP>
 Ranjivo: SSHv1 / password auth / brute force
 Fix: SSH keys + disable root + fail2ban
+key algoritmhms:
+diffie-hellman-group1-sha1
+diffie-hellman-group14-sha1
+diffie-hellman-group-exchange-sha1
+
+sever host key alg:
+ssh-dss (DSA – jako loše i zastarjelo)
+ssh-rsa (ako je SHA1 varijanta, često se smatra zastarjelim)
+
+ecnr:
+3des-cbc
+des-cbc
+blowfish-cbc
+arcfour / rc4
+bilo šta *-cbc (CBC je staro, nije nužno “hack”, ali je minus)
+
+mac:
+hmac-md5
+hmac-md5-96
+hmac-sha1
+hmac-sha1-96
+umac-64@openssh.com
 
 23 Telnet
 sudo nmap -sV -p23 <IP>
