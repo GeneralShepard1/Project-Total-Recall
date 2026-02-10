@@ -1,103 +1,251 @@
-2.1 Full port scan targeta
+# Nmap Scanning & Service Vulnerability Checks
+
+Ovaj dokument sadrži osnovne Nmap komande za skeniranje mrežnih servisa, identifikaciju verzija servisa i osnovnu provjeru ranjivosti.
+
+---
+
+## 2. Nmap Scanning
+
+### 2.1 Full port scan targeta
+
+```bash
 sudo nmap -p- <IP>
+```
 
-2.2 Detaljni scan (servis + verzija + OS)
+Skenira sve portove (1–65535).
+
+---
+
+### 2.2 Detaljni scan (servis + verzija + OS)
+
+```bash
 sudo nmap -sS -sV -O <IP>
+```
 
-2.3 General vuln scan
+- SYN scan  
+- detekcija verzije servisa  
+- pokušaj detekcije operativnog sistema  
+
+---
+
+### 2.3 General vulnerability scan
+
+```bash
 sudo nmap --script vuln <IP>
+```
 
-21 FTP
+Pokreće poznate vulnerability skripte.
+
+---
+
+## 21 FTP (Port 21)
+
+```bash
 sudo nmap -sV -p21 <IP>
 sudo nmap --script ftp-anon,ftp-banner,ftp-syst -p21 <IP>
-Ranjivo: anonymous login / plain-text login
-Fix: FTPS/SFTP, ugasiti FTP ako ne treba
-ranjiv ako je :vsftpd.3.4 (poznat primjer u labovima)
-Backdoor trojan (Remote shell) + kompromitacija sistema
+```
 
-22 SSH
+Ranjivo:
+- anonymous login
+- plain-text login
+- stare verzije (npr. vsftpd 3.4 u lab primjerima)
+
+Moguće:
+- backdoor trojan
+- remote shell
+- kompromitacija sistema
+
+Fix:
+- koristiti FTPS ili SFTP
+- ugasiti FTP ako nije potreban
+
+---
+
+## 22 SSH (Port 22)
+
+```bash
 sudo nmap -sV -p22 <IP>
 sudo nmap --script ssh2-enum-algos -p22 <IP>
 ssh -v user@<IP>
-Ranjivo: SSHv1 / password auth / brute force
-Fix: SSH keys + disable root + fail2ban
-key algoritmhms:
+```
+
+Ranjivo:
+- SSHv1
+- password authentication
+- brute force moguć
+
+Fix:
+- SSH keys
+- disable root login
+- fail2ban
+
+### Slabi key algoritmi
+
+```
 diffie-hellman-group1-sha1
 diffie-hellman-group14-sha1
 diffie-hellman-group-exchange-sha1
+```
 
-sever host key alg:
-ssh-dss (DSA – jako loše i zastarjelo)
-ssh-rsa (ako je SHA1 varijanta, često se smatra zastarjelim)
+### Slabi server host key algoritmi
 
-ecnr:
+```
+ssh-dss
+ssh-rsa (SHA1 varijanta)
+```
+
+### Slabi encryption algoritmi
+
+```
 3des-cbc
 des-cbc
 blowfish-cbc
 arcfour / rc4
-bilo šta *-cbc (CBC je staro, nije nužno “hack”, ali je minus)
+*-cbc
+```
 
-mac:
+### Slabi MAC algoritmi
+
+```
 hmac-md5
 hmac-md5-96
 hmac-sha1
 hmac-sha1-96
 umac-64@openssh.com
+```
 
-23 Telnet
+---
+
+## 23 Telnet (Port 23)
+
+```bash
 sudo nmap -sV -p23 <IP>
-Ranjivo: sve plain-text
-Fix: ugasiti telnet, koristiti SSH
+```
 
-80 HTTP
+Ranjivo:
+- sav saobraćaj ide plain-text
+
+Fix:
+- ugasiti telnet
+- koristiti SSH
+
+---
+
+## 80 HTTP (Port 80)
+
+```bash
 sudo nmap -sV -p80 <IP>
 sudo nmap --script http-title,http-headers,http-methods,http-enum,http-robots.txt -p80 <IP>
 sudo nmap --script http-trace -p80 <IP>
-Ranjivo: HTTP bez enkripcije / directory listing / TRACE
-Fix: HTTPS + update server + ugasiti listing
-Ako vidiš metode tipa:PUT,DELETE,TRACE,CONNECT
-to je ozbiljnije (moguć upload/modifikacija ili XST).
+```
 
-Šta znači?
-/server-status je Apache modul mod_status.
-Zašto je to ranjivo?
-Ako je dostupan bez zaštite, može pokazati:
-aktivne requestove
-IP adrese klijenata
-URL-ove koje ljudi posjećuju 
-onemogućiti mod_status ili dozvoliti samo localhost/admin IP:informacije o serveru i performansama
+Ranjivo:
+- HTTP bez enkripcije
+- directory listing
+- TRACE metoda
 
+Ako vidiš metode:
+```
+PUT, DELETE, TRACE, CONNECT
+```
+moguća modifikacija sadržaja ili XST napad.
 
+### /server-status
 
+Apache modul `mod_status`.
 
+Ako je javno dostupan može otkriti:
+- aktivne requestove
+- IP adrese klijenata
+- URL-ove koje korisnici posjećuju
 
-443 HTTPS
+Fix:
+- onemogućiti mod_status
+- dozvoliti samo localhost ili admin IP
+
+---
+
+## 443 HTTPS (Port 443)
+
+```bash
 sudo nmap -sV -p443 <IP>
 sudo nmap --script ssl-cert,ssl-enum-ciphers -p443 <IP>
-Ranjivo: SSLv3/TLS1.0, slabi cipheri, istekao cert
-Fix: zabraniti stare protokole, modern TLS
+```
 
-445 SMB
+Ranjivo:
+- SSLv3
+- TLS 1.0
+- slabi cipheri
+- istekao certifikat
+
+Fix:
+- modern TLS
+- zabraniti stare protokole
+
+---
+
+## 445 SMB (Port 445)
+
+```bash
 sudo nmap -sV -p445 <IP>
 sudo nmap --script smb-os-discovery,smb-security-mode -p445 <IP>
 sudo nmap --script smb-vuln* -p445 <IP>
 sudo nmap --script smb-protocols -p445 <IP>
-Ranjivo: SMBv1 (MS17-010/EternalBlue), SMB Ghost
-Fix: patch Windows + disable SMBv1 + blokirati 445
+```
 
-3389 RDP
+Ranjivo:
+- SMBv1
+- MS17-010 (EternalBlue)
+- SMB Ghost
+
+Fix:
+- patch Windows
+- disable SMBv1
+- blokirati port 445 firewallom
+
+---
+
+## 3389 RDP (Port 3389)
+
+```bash
 sudo nmap -sV -p3389 <IP>
 sudo nmap --script rdp-enum-encryption -p3389 <IP>
-Ranjivo: slaba enkripcija / BlueKeep stari sistemi
-Fix: update, NLA, firewall
+```
 
-3306 MySQL
+Ranjivo:
+- slaba enkripcija
+- BlueKeep (stari sistemi)
+
+Fix:
+- update sistema
+- NLA (Network Level Authentication)
+- firewall pravila
+
+---
+
+## 3306 MySQL (Port 3306)
+
+```bash
 sudo nmap -sV -p3306 <IP>
 sudo nmap --script mysql-info -p3306 <IP>
-Ranjivo: otvoren prema mreži / root bez šifre
-Fix: lozinka + bind localhost + firewall block
+```
 
-5432 PostgreSQL
+Ranjivo:
+- otvoren prema mreži
+- root bez lozinke
+
+Fix:
+- jaka lozinka
+- bind na localhost
+- firewall blokada
+
+---
+
+## 5432 PostgreSQL (Port 5432)
+
+```bash
 sudo nmap -sV -p5432 <IP>
 sudo nmap --script pgsql-info -p5432 <IP>
+```
 
+Provjera verzije i dostupnosti PostgreSQL servisa.
